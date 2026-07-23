@@ -1,68 +1,36 @@
 import json
-import os
-
-os.environ["OLLAMA_HOST"] = "http://127.0.0.1:11434"
-
 import ollama
-from tools import available_tools, tools_schema
+from config import BOT_NAME, OLLAMA_HOST
+from bot_runtime import (
+    build_messages,
+    check_ollama_connection,
+    execute_tool_calls,
+    get_model_name,
+    get_tool_schemas,
+)
 
+# Initialize the Ollama Client directly with your host string
+client = ollama.Client(host=OLLAMA_HOST)
 
-def append_tool_results(messages: list[dict], tool_calls: list[dict] | None) -> bool:
-    if not tool_calls:
-        return False
+is_connected, connection_message = check_ollama_connection()
+if not is_connected:
+    print(connection_message)
+    raise SystemExit(1)
 
-    has_results = False
-    for tool_call in tool_calls:
-        # Access as dict keys instead of object attributes
-        function_info = tool_call.get("function", {})
-        function_name = function_info.get("name")
-        function_args = function_info.get("arguments", {})
+messages = build_messages("What is two hundred forty 2 times 4?")
 
-        function_to_call = available_tools.get(function_name)
-        if function_to_call is None:
-            continue
-
-        messages.append(
-            {
-                "role": "tool",
-                "content": str(function_to_call(**function_args)),
-                "name": function_name,
-            }
-        )
-        has_results = True
-
-    return has_results
-
-
-messages = [
-    {
-        "role": "system",
-        "content": (
-            "You are a helpful computer assistant named 'RAY-BOT'. "
-            "Use available tools when math is requested. "
-            "Always respond to the user in a natural, friendly sentence. "
-            "Never output raw JSON parameters."
-        ),
-    },
-    {
-        "role": "user",
-        "content": "Bro what is 140 plus 4",
-    },
-]
-
-response = ollama.chat(
-    model="qwen2.5-coder:7b",
+# Call chat using the configured client
+response = client.chat(
+    model=get_model_name(),
     messages=messages,
-    tools=tools_schema,
+    tools=get_tool_schemas()
 )
 
 messages.append(response["message"])
 
-# Safely handle tool_calls from response
 tool_calls = response["message"].get("tool_calls") or []
-
-# Fallback: Parse inline JSON if the model leaked a tool call inside "content"
 content_str = response["message"].get("content", "").strip()
+
 if not tool_calls and content_str.startswith("{") and content_str.endswith("}"):
     try:
         data = json.loads(content_str)
@@ -71,11 +39,7 @@ if not tool_calls and content_str.startswith("{") and content_str.endswith("}"):
     except json.JSONDecodeError:
         pass
 
-# Run tool execution and re-prompt for natural text
-if append_tool_results(messages, tool_calls):
-    final_response = ollama.chat(model="qwen2.5-coder:7b", messages=messages)
-    print("RAY-BOT Output:")
-    print(final_response["message"]["content"].strip())
-else:
-    print("RAY-BOT Output:")
+print(f"{BOT_NAME} Output:")
+outputs = execute_tool_calls(messages, tool_calls)
+if not outputs:
     print(content_str)

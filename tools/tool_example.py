@@ -23,3 +23,10 @@ example_tool_schema = {
         },
     },
 }
+
+example_tool_spec = {
+    "name": "example_tool",
+    "function": example_tool,
+    "schema": example_tool_schema,
+    "terminal": True,
+}

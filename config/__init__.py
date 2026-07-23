@@ -1,0 +1,3 @@
+from .bot import BOT_NAME, DEFAULT_MODEL, OLLAMA_HOST
+
+__all__ = ["BOT_NAME", "DEFAULT_MODEL", "OLLAMA_HOST"]

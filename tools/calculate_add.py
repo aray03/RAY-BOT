@@ -1,6 +1,7 @@
 def calculate_add(a: float, b: float) -> str:
-    print(f"Calculating the sum of {a} and {b}")
-    return str(a + b)
+    result = str(a + b)
+    print(result)
+    return result
 
 
 calculate_add_schema = {
@@ -17,4 +18,11 @@ calculate_add_schema = {
             "required": ["a", "b"],
         },
     },
+}
+
+calculate_add_spec = {
+    "name": "calculate_add",
+    "function": calculate_add,
+    "schema": calculate_add_schema,
+    "terminal": True,
 }
