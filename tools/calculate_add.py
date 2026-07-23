@@ -1,4 +1,5 @@
 def calculate_add(a: float, b: float) -> str:
+    print(f"Calculating the sum of {a} and {b}")
     return str(a + b)
 
 
