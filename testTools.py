@@ -1,38 +1,10 @@
+import os
+os.environ["OLLAMA_HOST"] = "http://127.0.0.1:11434"
+
 import json
 import ollama
 
-# 1. Define the Python function
-def calculate_add(a: float, b: float) -> str:
-    """Add two numbers together.
-
-    Args:
-        a: The first number.
-        b: The second number.
-    """
-    return str(a + b)
-
-available_tools = {
-    "calculate_add": calculate_add
-}
-
-# 2. Explicit JSON schema format for Ollama
-tools_schema = [
-    {
-        "type": "function",
-        "function": {
-            "name": "calculate_add",
-            "description": "Add two numbers together.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "a": {"type": "number", "description": "The first number"},
-                    "b": {"type": "number", "description": "The second number"},
-                },
-                "required": ["a", "b"],
-            },
-        },
-    }
-]
+from tools import available_tools, tools_schema
 
 messages = [
     {
@@ -41,21 +13,18 @@ messages = [
     },
     {
         "role": "user",
-        "content": "Bro what is 140 times 4",
+        "content": "Bro what is 140 plus 4",
     },
 ]
 
-# 3. First call to Ollama
 response = ollama.chat(
     model="qwen2.5-coder:7b",
     messages=messages,
     tools=tools_schema,
 )
 
-# Keep track of conversation history
 messages.append(response["message"])
 
-# 4. Check for native tool calls or parse raw JSON fallback
 tool_calls = response["message"].get("tool_calls")
 
 if tool_calls:
@@ -79,9 +48,7 @@ if tool_calls:
 
     print("AIDZ Output:")
     print(final_response["message"]["content"])
-
 else:
-    # Fallback logic: If the model output raw JSON into the text content, parse it with json.loads
     content = response["message"]["content"].strip()
 
     if content.startswith("{") and "name" in content:
@@ -107,7 +74,7 @@ else:
                 print(final_response["message"]["content"])
 
         except json.JSONDecodeError:
-            print("Failed to parse string output as JSON:")
+            print("Failed to parse output:")
             print(content)
     else:
         print("AIDZ Output:")
