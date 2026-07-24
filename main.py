@@ -1,4 +1,6 @@
 import json
+import sys
+
 import ollama
 from config import BOT_NAME, OLLAMA_HOST
 from bot_runtime import (
@@ -9,7 +11,7 @@ from bot_runtime import (
     get_tool_schemas,
 )
 
-# Initialize the Ollama Client directly with your host string
+#Double check we are able to connect to the Ollama server, for error handling
 client = ollama.Client(host=OLLAMA_HOST)
 
 is_connected, connection_message = check_ollama_connection()
@@ -17,7 +19,11 @@ if not is_connected:
     print(connection_message)
     raise SystemExit(1)
 
-messages = build_messages("Count to 5 tacos")
+
+# Combine all CLI arguments
+inputStr = " ".join(sys.argv[1:])
+
+messages = build_messages(inputStr)
 
 # Call chat using the configured client
 response = client.chat(
@@ -39,7 +45,7 @@ if not tool_calls and content_str.startswith("{") and content_str.endswith("}"):
     except json.JSONDecodeError:
         pass
 
-print(f"{BOT_NAME} Output:")
+#print(f"{BOT_NAME} Output:")
 outputs = execute_tool_calls(messages, tool_calls)
 if not outputs:
     print(content_str)

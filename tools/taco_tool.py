@@ -40,7 +40,7 @@ def _coerce_count(count: int | None, user_text: str | None) -> int:
 
     return 1
 
-
+#TODO is this line redudant???
 def print_i_like_tacos(count: int | None = None, user_text: str | None = None) -> str:
     total = _coerce_count(count, user_text)
     lines = ["I LIKE TACOS" for _ in range(total)]

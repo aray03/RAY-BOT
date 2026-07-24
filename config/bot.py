@@ -1,3 +1,3 @@
 BOT_NAME = "RAY-BOT"
 DEFAULT_MODEL = "qwen2.5-coder:7b"
-OLLAMA_HOST = "http://127.0.0.1:11434"
+OLLAMA_HOST = "http://10.0.0.90:11434"
