@@ -17,7 +17,7 @@ if not is_connected:
     print(connection_message)
     raise SystemExit(1)
 
-messages = build_messages("What is two hundred forty 2 times 4?")
+messages = build_messages("Count to 5 tacos")
 
 # Call chat using the configured client
 response = client.chat(
