@@ -1,51 +1,57 @@
-import json
 import sys
+from config import BOT_NAME, DEFAULT_MODEL, OLLAMA_HOST
+from langchain_ollama import ChatOllama
+from langchain_core.messages import SystemMessage, HumanMessage
+from tools import available_tools
+from bot_runtime import check_ollama_connection, prepare_tool_args
 
-import ollama
-from config import BOT_NAME, OLLAMA_HOST
-from bot_runtime import (
-    build_messages,
-    check_ollama_connection,
-    execute_tool_calls,
-    get_model_name,
-    get_tool_schemas,
+SYSTEM_PROMPT = (
+    f"You are a helpful computer assistant named '{BOT_NAME}'. "
+    "Use available tools when math or tool requests are asked. "
+    "Do not call the model again after a tool runs; the tool output is the response. "
+    "Never output raw JSON parameters."
 )
 
-#Double check we are able to connect to the Ollama server, for error handling
-client = ollama.Client(host=OLLAMA_HOST)
+def main():
+    # 1. Health check
+    is_connected, message = check_ollama_connection()
+    if not is_connected:
+        print(message)
+        sys.exit(1)
 
-is_connected, connection_message = check_ollama_connection()
-if not is_connected:
-    print(connection_message)
-    raise SystemExit(1)
+    # 2. Extract CLI Input
+    user_input = " ".join(sys.argv[1:]).strip()
+    if not user_input:
+        print("Please provide a prompt.")
+        sys.exit(0)
 
+    # 3. Initialize LangChain Ollama model & bind tools
+    llm = ChatOllama(
+        model=DEFAULT_MODEL,
+        base_url=OLLAMA_HOST,
+        temperature=0
+    ).bind_tools(list(available_tools.values()))
 
-# Combine all CLI arguments
-inputStr = " ".join(sys.argv[1:])
+    # 4. Invoke LLM
+    messages = [
+        SystemMessage(content=SYSTEM_PROMPT),
+        HumanMessage(content=user_input)
+    ]
+    
+    response = llm.invoke(messages)
 
-messages = build_messages(inputStr)
+    # 5. Handle Tool Calls or Direct Content
+    if response.tool_calls:
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_func = available_tools.get(tool_name)
+            
+            if tool_func:
+                args = prepare_tool_args(tool_name, tool_call["args"], user_input)
+                output = tool_func(**args)
+                print(output)
+    else:
+        print(response.content.strip())
 
-# Call chat using the configured client
-response = client.chat(
-    model=get_model_name(),
-    messages=messages,
-    tools=get_tool_schemas()
-)
-
-messages.append(response["message"])
-
-tool_calls = response["message"].get("tool_calls") or []
-content_str = response["message"].get("content", "").strip()
-
-if not tool_calls and content_str.startswith("{") and content_str.endswith("}"):
-    try:
-        data = json.loads(content_str)
-        if "name" in data and "arguments" in data:
-            tool_calls = [{"function": data}]
-    except json.JSONDecodeError:
-        pass
-
-#print(f"{BOT_NAME} Output:")
-outputs = execute_tool_calls(messages, tool_calls)
-if not outputs:
-    print(content_str)
+if __name__ == "__main__":
+    main()

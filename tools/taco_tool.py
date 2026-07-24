@@ -1,80 +1,29 @@
 from __future__ import annotations
+from langchain_core.tools import tool
 
-_NUMBER_WORDS = {
-    "zero": 0,
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-    "eleven": 11,
-    "twelve": 12,
-    "thirteen": 13,
-    "fourteen": 14,
-    "fifteen": 15,
-    "sixteen": 16,
-    "seventeen": 17,
-    "eighteen": 18,
-    "nineteen": 19,
-    "twenty": 20,
-}
+@tool
+def print_i_like_tacos(count: int = 1) -> str:
+    """Print 'I LIKE TACOS' the requested number of times.
 
-
-def _coerce_count(count: int | None, user_text: str | None) -> int:
-    if isinstance(count, int) and count > 0:
-        return count
-
-    if user_text:
-        for token in user_text.lower().replace("-", " ").split():
-            if token.isdigit():
-                parsed = int(token)
-                if parsed > 0:
-                    return parsed
-            if token in _NUMBER_WORDS and _NUMBER_WORDS[token] > 0:
-                return _NUMBER_WORDS[token]
-
-    return 1
-
-#TODO is this line redudant???
-def print_i_like_tacos(count: int | None = None, user_text: str | None = None) -> str:
-    total = _coerce_count(count, user_text)
-    lines = ["I LIKE TACOS" for _ in range(total)]
-    output = "\n".join(lines)
+    Args:
+        count: How many times to print the phrase. Defaults to 1.
+    """
+    # Safe guard to ensure count is at least 1
+    total = max(1, count)
+    
+    output = "\n".join(["I LIKE TACOS"] * total)
     print(output)
     return output
 
-
-print_i_like_tacos_schema = {
-    "type": "function",
-    "function": {
-        "name": "print_i_like_tacos",
-        "description": "Print 'I LIKE TACOS' the requested number of times.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer",
-                    "description": "How many times to print the phrase.",
-                    "minimum": 1,
-                },
-                "user_text": {
-                    "type": "string",
-                    "description": "The user's original text, used to infer a count when one is not explicit.",
-                },
-            },
-            "required": [],
-        },
-    },
+# Mapping used by main.py to resolve function execution by name
+available_tools = {
+    "print_i_like_tacos": print_i_like_tacos
 }
 
-print_i_like_tacos_spec = {
-    "name": "print_i_like_tacos",
-    "function": print_i_like_tacos,
-    "schema": print_i_like_tacos_schema,
-    "terminal": True,
-}
+# Optional helper if main.py needs tool specs
+def get_tool_spec(tool_name: str) -> dict:
+    return {
+        "name": tool_name,
+        "function": available_tools.get(tool_name),
+        "terminal": True
+    }
