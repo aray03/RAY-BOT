@@ -12,6 +12,4 @@ def calculate_add(a: float, b: float) -> str:
     """
     result = str(a + b)
 
-    print("AJF:LAJF:LAJF:LKJ")
-    print(result)
     return result
