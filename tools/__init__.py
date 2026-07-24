@@ -1,10 +1,12 @@
 from .calculate_add import calculate_add
 from .taco_tool import print_i_like_tacos
+from .pascals_triangle import pascals_triangle
 
 # List of LangChain tool objects to bind to the LLM
 tools = [
     calculate_add,
     print_i_like_tacos,
+    pascals_triangle,
 ]
 
 # Dictionary for quick lookup during execution: {"calculate_add": calculate_add, ...}
