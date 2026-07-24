@@ -1,17 +1,37 @@
-from .calculate_add import calculate_add_spec
-from .taco_tool import print_i_like_tacos_spec
+from .calculate_add import calculate_add
+from .taco_tool import print_i_like_tacos
 
-tool_specs = {
-    calculate_add_spec["name"]: calculate_add_spec,
-    print_i_like_tacos_spec["name"]: print_i_like_tacos_spec,
-}
+# List of LangChain tool objects to bind to the LLM
+tools = [
+    calculate_add,
+    print_i_like_tacos,
+]
 
-available_tools = {
-    name: spec["function"] for name, spec in tool_specs.items()
-}
-
-tools_schema = [spec["schema"] for spec in tool_specs.values()]
+# Dictionary for quick lookup during execution: {"calculate_add": calculate_add, ...}
+available_tools = {tool.name: tool for tool in tools}
 
 
-def get_tool_spec(tool_name: str):
-    return tool_specs.get(tool_name)
+def get_tool_spec(tool_name: str) -> dict | None:
+    tool = available_tools.get(tool_name)
+    if tool is None:
+        return None
+
+    args_schema = getattr(tool, "args_schema", None)
+    if args_schema is None:
+        parameters = {}
+    elif hasattr(args_schema, "model_json_schema"):
+        parameters = args_schema.model_json_schema()
+    elif hasattr(args_schema, "schema"):
+        parameters = args_schema.schema()
+    else:
+        parameters = {}
+
+    return {
+        "name": tool.name,
+        "schema": {
+            "function": {
+                "name": tool.name,
+                "parameters": parameters,
+            }
+        },
+    }

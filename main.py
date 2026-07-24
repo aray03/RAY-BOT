@@ -7,9 +7,8 @@ from bot_runtime import check_ollama_connection, prepare_tool_args
 
 SYSTEM_PROMPT = (
     f"You are a helpful computer assistant named '{BOT_NAME}'. "
-    "Use available tools when math or tool requests are asked. "
-    "Do not call the model again after a tool runs; the tool output is the response. "
-    "Never output raw JSON parameters."
+    "Always use available tools when math or tool requests are asked. Do not attempt to calculate or answer math questions yourself. "
+
 )
 
 def main():
@@ -42,15 +41,17 @@ def main():
 
     # 5. Handle Tool Calls or Direct Content
     if response.tool_calls:
-        for tool_call in response.tool_calls:
+       for tool_call in response.tool_calls:
             tool_name = tool_call["name"]
             tool_func = available_tools.get(tool_name)
             
             if tool_func:
-                args = prepare_tool_args(tool_name, tool_call["args"], user_input)
-                output = tool_func(**args)
-                print(output)
+                toolArgs = prepare_tool_args(tool_name, tool_call["args"], user_input)
+                # Use the .invoke() method and pass the args dictionary directly
+                output = tool_func.invoke(toolArgs) 
+                print(output) 
     else:
+        
         print(response.content.strip())
 
 if __name__ == "__main__":

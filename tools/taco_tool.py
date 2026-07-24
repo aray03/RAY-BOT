@@ -8,22 +8,7 @@ def print_i_like_tacos(count: int = 1) -> str:
     Args:
         count: How many times to print the phrase. Defaults to 1.
     """
-    # Safe guard to ensure count is at least 1
     total = max(1, count)
-    
     output = "\n".join(["I LIKE TACOS"] * total)
     print(output)
     return output
-
-# Mapping used by main.py to resolve function execution by name
-available_tools = {
-    "print_i_like_tacos": print_i_like_tacos
-}
-
-# Optional helper if main.py needs tool specs
-def get_tool_spec(tool_name: str) -> dict:
-    return {
-        "name": tool_name,
-        "function": available_tools.get(tool_name),
-        "terminal": True
-    }
