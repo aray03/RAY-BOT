@@ -1,3 +1,4 @@
+from tools.vid_dl import download_video
 from .calculate_add import calculate_add
 from .taco_tool import print_i_like_tacos
 from .pascals_triangle import pascals_triangle
@@ -7,6 +8,7 @@ tools = [
     calculate_add,
     print_i_like_tacos,
     pascals_triangle,
+    download_video,
 ]
 
 # Dictionary for quick lookup during execution: {"calculate_add": calculate_add, ...}
