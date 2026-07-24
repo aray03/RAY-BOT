@@ -1,0 +1,1 @@
+A simple project in order to create a AI Agent using local AI Models through ollama.
