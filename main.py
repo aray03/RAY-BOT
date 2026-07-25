@@ -21,6 +21,7 @@ def main():
     # 2. Extract CLI Input
     user_input = " ".join(sys.argv[1:]).strip()
     if not user_input:
+        food = input("Please provide a prompt: ")
         print("Please provide a prompt.")
         sys.exit(0)
 
