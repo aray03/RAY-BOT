@@ -62,7 +62,15 @@ def search_prompt(value: str, system_prompt: str = "", max_results: int = 3) -> 
     prompt_with_context = f"""Web Search Context:
 {web_context}
 
-User Question: {value}"""
+User Question: {value}
+
+
+Guidelines:
+- Use the web search context to answer the user's question.
+- Don't mention anything about the web search context in your answer, such as saying 'According to the web search results...'.
+- Don't mention anything about the web search engine or SearXNG in your answer.
+- Don't mention anything about sources unless it is specifically relevant to the answer or asked specifically
+"""
 
     messages.append(HumanMessage(content=prompt_with_context))
 
