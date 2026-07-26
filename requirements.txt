@@ -1,6 +1,3 @@
-ollama
-langchain
-langchain-core
 langchain-ollama
 yt-dlp
 requests
