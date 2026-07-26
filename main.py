@@ -3,6 +3,7 @@ from config import BOT_NAME, DEFAULT_MODEL, OLLAMA_HOST
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage
 from tools import available_tools
+from tools.normal_prompt import normal_prompt
 from bot_runtime import check_ollama_connection, prepare_tool_args
 
 SYSTEM_PROMPT = (
@@ -19,10 +20,21 @@ def main():
         sys.exit(1)
 
     # 2. Extract CLI Input
-    user_input = " ".join(sys.argv[1:]).strip()
+    cli_args = sys.argv[1:]
+    use_tools = False
+
+    if cli_args and cli_args[0] == "-t":
+        use_tools = True
+        cli_args = cli_args[1:]
+
+    user_input = " ".join(cli_args).strip()
     if not user_input:
         print("Please provide a prompt.")
         sys.exit(0)
+
+    if not use_tools:
+        print(normal_prompt(user_input, SYSTEM_PROMPT))
+        return
 
     # 3. Initialize LangChain Ollama model & bind tools
     llm = ChatOllama(
@@ -36,22 +48,20 @@ def main():
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=user_input)
     ]
-    
+
     response = llm.invoke(messages)
 
     # 5. Handle Tool Calls or Direct Content
     if response.tool_calls:
-       for tool_call in response.tool_calls:
+        for tool_call in response.tool_calls:
             tool_name = tool_call["name"]
             tool_func = available_tools.get(tool_name)
-            
+
             if tool_func:
                 toolArgs = prepare_tool_args(tool_name, tool_call["args"], user_input)
-                # Use the .invoke() method and pass the args dictionary directly
-                output = tool_func.invoke(toolArgs) 
-                print(output) 
+                output = tool_func.invoke(toolArgs)
+                print(output)
     else:
-        
         print(response.content.strip())
 
 if __name__ == "__main__":
